@@ -5,6 +5,7 @@ import * as config from 'config'
 import { attachDefaultHooks } from '../../../routes/hooks'
 import '../../../routes/expectations'
 import { checkAuthorizationGuards } from './checks/authorization-check'
+import { checkPaymentOptionGuard } from './checks/payment-option-check'
 
 import { Paths as CCJPaths } from 'ccj/paths'
 
@@ -14,17 +15,29 @@ import * as idamServiceMock from '../../../http-mocks/idam'
 import * as claimStoreServiceMock from '../../../http-mocks/claim-store'
 import { sampleClaimObj } from '../../../http-mocks/claim-store'
 import * as draftStoreServiceMock from '../../../http-mocks/draft-store'
+import { PaymentType } from 'ccj/form/models/ccjPaymentOption'
 
 const externalId = sampleClaimObj.externalId
 const cookieName: string = config.get<string>('session.cookieName')
 const repaymentPlanPage = CCJPaths.repaymentPlanPage.evaluateUri({ externalId: externalId })
 const checkAndSendPage = CCJPaths.checkAndSendPage.evaluateUri({ externalId: externalId })
 
+const draftOverride: object = {
+  paymentOption: {
+    option: {
+      value: PaymentType.INSTALMENTS.value,
+      displayValue: PaymentType.INSTALMENTS.displayValue
+    }
+  },
+  payBySetDate: undefined
+}
+
 describe('CCJ: repayment page', () => {
   attachDefaultHooks()
 
   describe('on GET', () => {
     checkAuthorizationGuards(app, 'get', repaymentPlanPage)
+    checkPaymentOptionGuard(app, 'get', repaymentPlanPage, PaymentType.INSTALMENTS)
 
     describe('for authorized user', () => {
       beforeEach(() => {
@@ -53,7 +66,7 @@ describe('CCJ: repayment page', () => {
 
         it('should render page when everything is fine', async () => {
           claimStoreServiceMock.resolveRetrieveClaimByExternalId()
-          draftStoreServiceMock.resolveFind('ccj')
+          draftStoreServiceMock.resolveFind('ccj', draftOverride)
 
           await request(app)
             .get(repaymentPlanPage)
@@ -78,6 +91,7 @@ describe('CCJ: repayment page', () => {
     }
 
     checkAuthorizationGuards(app, 'post', repaymentPlanPage)
+    checkPaymentOptionGuard(app, 'post', repaymentPlanPage, PaymentType.INSTALMENTS)
 
     context('when user authorised', () => {
       beforeEach(() => {
@@ -108,7 +122,7 @@ describe('CCJ: repayment page', () => {
       context('when form is valid', async () => {
         it('should redirect to confirmation page', async () => {
           claimStoreServiceMock.resolveRetrieveClaimByExternalId()
-          draftStoreServiceMock.resolveFind('ccj')
+          draftStoreServiceMock.resolveFind('ccj', draftOverride)
           draftStoreServiceMock.resolveSave()
 
           await request(app)
@@ -122,7 +136,7 @@ describe('CCJ: repayment page', () => {
       context('when form is invalid', async () => {
         it('should render page with error messages', async () => {
           claimStoreServiceMock.resolveRetrieveClaimByExternalId()
-          draftStoreServiceMock.resolveFind('ccj')
+          draftStoreServiceMock.resolveFind('ccj', draftOverride)
 
           await request(app)
             .post(repaymentPlanPage)

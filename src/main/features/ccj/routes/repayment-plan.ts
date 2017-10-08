@@ -2,6 +2,7 @@ import * as express from 'express'
 
 import { Paths } from 'ccj/paths'
 
+import { PaymentOptionGuard } from 'ccj/guards/paymentOptionGuard'
 import { ErrorHandling } from 'common/errorHandling'
 import { Form } from 'app/forms/form'
 import { DraftService } from 'common/draft/draftService'
@@ -22,26 +23,27 @@ function renderView (form: Form<PaidAmount>, res: express.Response): void {
 
 export default express.Router()
   .get(Paths.repaymentPlanPage.uri,
+    PaymentOptionGuard.requestHandler,
     ErrorHandling.apply(async (req: express.Request, res: express.Response) => {
       const user: User = res.locals.user
       renderView(new Form(user.ccjDraft.document.repaymentPlan), res)
     }))
 
   .post(Paths.repaymentPlanPage.uri,
+    PaymentOptionGuard.requestHandler,
     FormValidator.requestHandler(RepaymentPlan, RepaymentPlan.fromObject),
-    ErrorHandling.apply(
-      async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+    ErrorHandling.apply(async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
 
-        const form: Form<RepaymentPlan> = req.body
-        const user: User = res.locals.user
+      const form: Form<RepaymentPlan> = req.body
+      const user: User = res.locals.user
 
-        if (form.hasErrors()) {
-          renderView(form, res)
-        } else {
-          const { externalId } = req.params
-          user.ccjDraft.document.repaymentPlan = form.model
-          user.ccjDraft.document.payBySetDate = undefined
-          await DraftService.save(user.ccjDraft, user.bearerToken)
-          res.redirect(Paths.checkAndSendPage.evaluateUri({ externalId: externalId }))
-        }
-      }))
+      if (form.hasErrors()) {
+        renderView(form, res)
+      } else {
+        const { externalId } = req.params
+        user.ccjDraft.document.repaymentPlan = form.model
+        user.ccjDraft.document.payBySetDate = undefined
+        await DraftService.save(user.ccjDraft, user.bearerToken)
+        res.redirect(Paths.checkAndSendPage.evaluateUri({ externalId: externalId }))
+      }
+    }))

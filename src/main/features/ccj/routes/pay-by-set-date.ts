@@ -7,6 +7,7 @@ import { FormValidator } from 'forms/validation/formValidator'
 import { PayBySetDate } from 'ccj/form/models/payBySetDate'
 import User from 'idam/user'
 import { DraftService } from 'common/draft/draftService'
+import { PaymentOptionGuard } from 'ccj/guards/paymentOptionGuard'
 import { ErrorHandling } from 'common/errorHandling'
 
 function renderView (form: Form<PayBySetDate>, res: express.Response): void {
@@ -14,12 +15,15 @@ function renderView (form: Form<PayBySetDate>, res: express.Response): void {
 }
 
 export default express.Router()
-  .get(Paths.payBySetDatePage.uri, (req: express.Request, res: express.Response) => {
-    const user: User = res.locals.user
-    renderView(new Form(user.ccjDraft.document.payBySetDate), res)
-  })
+  .get(Paths.payBySetDatePage.uri,
+    PaymentOptionGuard.requestHandler,
+    (req: express.Request, res: express.Response) => {
+      const user: User = res.locals.user
+      renderView(new Form(user.ccjDraft.document.payBySetDate), res)
+    })
   .post(
     Paths.payBySetDatePage.uri,
+    PaymentOptionGuard.requestHandler,
     FormValidator.requestHandler(PayBySetDate, PayBySetDate.fromObject),
     ErrorHandling.apply(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       const form: Form<PayBySetDate> = req.body

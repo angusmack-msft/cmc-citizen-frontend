@@ -19,7 +19,9 @@ import * as idamServiceMock from '../../../http-mocks/idam'
 import * as claimStoreServiceMock from '../../../http-mocks/claim-store'
 import * as draftStoreServiceMock from '../../../http-mocks/draft-store'
 import { checkAuthorizationGuards } from './checks/authorization-check'
+import { checkPaymentOptionGuard } from './checks/payment-option-check'
 import { sampleClaimObj } from '../../../http-mocks/claim-store'
+import { PaymentType } from 'ccj/form/models/ccjPaymentOption'
 
 const externalId = sampleClaimObj.externalId
 
@@ -27,11 +29,22 @@ const cookieName: string = config.get<string>('session.cookieName')
 const payBySetDatePage: string = Paths.payBySetDatePage.evaluateUri({externalId : externalId})
 const checkAndSavePage: string = Paths.checkAndSendPage.evaluateUri({externalId : externalId})
 
+const draftOverride: object = {
+  paymentOption: {
+    option: {
+      value: PaymentType.FULL_BY_SPECIFIED_DATE.value,
+      displayValue: PaymentType.FULL_BY_SPECIFIED_DATE.displayValue
+    }
+  },
+  repaymentPlan: undefined
+}
+
 describe('CCJ - Pay by set date', () => {
   attachDefaultHooks()
 
   describe('on GET', () => {
     checkAuthorizationGuards(app, 'get', payBySetDatePage)
+    checkPaymentOptionGuard(app, 'get', payBySetDatePage, PaymentType.FULL_BY_SPECIFIED_DATE)
 
     context('when user authorised', () => {
       beforeEach(() => {
@@ -59,7 +72,7 @@ describe('CCJ - Pay by set date', () => {
 
       it('should render page when everything is fine', async () => {
         claimStoreServiceMock.resolveRetrieveClaimByExternalId()
-        draftStoreServiceMock.resolveFind('ccj')
+        draftStoreServiceMock.resolveFind('ccj', draftOverride)
 
         await request(app)
           .get(payBySetDatePage)
@@ -73,6 +86,7 @@ describe('CCJ - Pay by set date', () => {
     const validFormData = { known: 'true', date: { day: '31', month: '12', year: '2018' } }
 
     checkAuthorizationGuards(app, 'post', payBySetDatePage)
+    checkPaymentOptionGuard(app, 'post', payBySetDatePage, PaymentType.FULL_BY_SPECIFIED_DATE)
 
     context('when user authorised', () => {
       beforeEach(() => {
@@ -103,7 +117,7 @@ describe('CCJ - Pay by set date', () => {
       context('when form is valid', async () => {
         it('should return 500 and render error page when cannot save ccj draft', async () => {
           claimStoreServiceMock.resolveRetrieveClaimByExternalId()
-          draftStoreServiceMock.resolveFind('ccj')
+          draftStoreServiceMock.resolveFind('ccj', draftOverride)
           draftStoreServiceMock.rejectSave()
 
           await request(app)
@@ -115,7 +129,7 @@ describe('CCJ - Pay by set date', () => {
 
         it('should redirect to check and send page', async () => {
           claimStoreServiceMock.resolveRetrieveClaimByExternalId()
-          draftStoreServiceMock.resolveFind('ccj')
+          draftStoreServiceMock.resolveFind('ccj', draftOverride)
           draftStoreServiceMock.resolveSave()
 
           await request(app)
@@ -129,7 +143,7 @@ describe('CCJ - Pay by set date', () => {
       context('when form is invalid', async () => {
         it('should render page', async () => {
           claimStoreServiceMock.resolveRetrieveClaimByExternalId()
-          draftStoreServiceMock.resolveFind('ccj')
+          draftStoreServiceMock.resolveFind('ccj', draftOverride)
 
           await request(app)
             .post(payBySetDatePage)
