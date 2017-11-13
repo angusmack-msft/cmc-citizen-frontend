@@ -42,6 +42,7 @@
     "@types/nunjucks": "^3.0.0",
     "@types/request-promise-native": "^1.0.2",
     "@types/shortid": "^0.0.29",
+    "awesome-typescript-loader": "^3.3.0",
     "body-parser": "^1.13.3",
     "build-url": "^1.0.9",
     "class-transformer": "^0.1.7",
@@ -52,6 +53,7 @@
     "csurf": "^1.9.0",
     "es6-promisify": "^5.0.0",
     "express": "^4.13.3",
+    "file-loader": "^1.1.5",
     "govuk-elements-sass": "^3.0.2",
     "govuk_template_jinja": "0.23.0",
     "helmet": "^3.1.0",
@@ -76,7 +78,8 @@
     "ts-node": "^3.3.0",
     "tsconfig-paths": "^2.2.0",
     "typescript": "^2.4.2",
-    "uuid": "^3.0.1"
+    "uuid": "^3.0.1",
+    "webpack-node-externals": "^1.6.0"
   },
   "devDependencies": {
     "@types/chai": "^4.0.3",
@@ -115,7 +118,8 @@
     "sonarqube-scanner": "^2.0.1",
     "supertest": "^3.0.0",
     "tslint": "^5.5.0",
-    "tslint-config-standard": "^7.0.0"
+    "tslint-config-standard": "^7.0.0",
+    "webpack": "^3.8.1"
   },
   "nyc": {
     "extension": [

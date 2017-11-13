@@ -1,6 +1,4 @@
-#!/usr/bin/env node
-
-import './ts-paths-bootstrap'
+// import './ts-paths-bootstrap'
 import { cpus } from 'os'
 import * as config from 'config'
 import * as toBoolean from 'to-boolean'
