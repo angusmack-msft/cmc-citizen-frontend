@@ -32,6 +32,7 @@ module.exports = {
     ]
   },
   plugins: [
+    new webpack.ProgressPlugin(),
     new CheckerPlugin(),
     new webpack.DefinePlugin({
       $dirname: '__dirname',
